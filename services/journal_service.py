@@ -1,83 +1,65 @@
-from db import init_db, get_connection
-from datetime import date
-
-ASSETS = ["BTC", "ETH", "SOL"]
-
-
-def yes_no(prompt):
-    return 1 if input(prompt + " (y/n): ").lower() == "y" else 0
+from datetime import datetime
+from typing import List, Optional
+from core.models import JournalEntry
+from db.repository import JournalRepository
 
 
-def collect_asset():
-    asset = input("Asset: ")
-    timeframe = input("Timeframe (1D/4H/1H): ")
-    trend = input("Trend: ")
-    hh = yes_no("Higher High?")
-    hl = yes_no("Higher Low?")
-    lh = yes_no("Lower High?")
-    ll = yes_no("Lower Low?")
-    support = float(input("Support: "))
-    resistance = float(input("Resistance: "))
-    volume_level = input("Volume level: ")
-    volume_trend = input("Volume trend: ")
-    liquidity = input("Liquidity: ")
-    spread = input("Spread: ")
+class JournalService:
+    """
+    Business logic layer.
+    Responsible for:
+    - validation
+    - normalization
+    - domain workflows
+    """
 
-    return (
-        asset, timeframe, trend, hh, hl, lh, ll,
-        support, resistance, volume_level,
-        volume_trend, liquidity, spread
-    )
+    def __init__(self, repository: JournalRepository):
+        self.repository = repository
 
+    def create_entry(
+        self,
+        market: str,
+        hypothesis: str,
+        observation: str = "",
+        confidence: float = 0.5,
+        tags: Optional[List[str]] = None
+    ) -> int:
 
-def main():
-    init_db()
+        if tags is None:
+            tags = []
 
-    conn = get_connection()
-    cur = conn.cursor()
+        self._validate_market(market)
+        self._validate_confidence(confidence)
+        self._validate_hypothesis(hypothesis)
 
-    today = str(date.today())
-
-    market_context = input("Market Context: ")
-    risk_regime = input("Risk Regime: ")
-    confidence = int(input("Confidence (0-100): "))
-    hypothesis = input("Hypothesis: ")
-    probability = int(input("Probability: "))
-    invalidation = input("Invalidation: ")
-    uncertainty = input("Biggest uncertainty: ")
-    bias = input("Possible bias: ")
-
-    cur.execute("""
-        INSERT INTO daily_reports (
-            date, market_context, risk_regime,
-            confidence, hypothesis, probability,
-            invalidation, uncertainty, bias
+        entry = JournalEntry(
+            timestamp=datetime.utcnow().isoformat(),
+            market=market.upper(),
+            hypothesis=hypothesis.strip(),
+            observation=observation.strip(),
+            confidence=confidence,
+            tags=tags
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (
-        today, market_context, risk_regime,
-        confidence, hypothesis, probability,
-        invalidation, uncertainty, bias
-    ))
 
-    report_id = cur.lastrowid
+        return self.repository.create_entry(entry)
 
-    for asset_name in ASSETS:
-        print(f"\n--- {asset_name} ---")
-        asset_data = collect_asset()
+    def get_entries(self) -> List[JournalEntry]:
+        return self.repository.get_all_entries()
 
-        cur.execute("""
-            INSERT INTO asset_analysis (
-                report_id, asset, timeframe, trend,
-                hh, hl, lh, ll, support, resistance,
-                volume_level, volume_trend, liquidity, spread
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (report_id,) + asset_data)
+    def get_entry(self, entry_id: int) -> Optional[JournalEntry]:
+        return self.repository.get_entry_by_id(entry_id)
 
-    conn.commit()
-    conn.close()
+    def delete_entry(self, entry_id: int) -> bool:
+        return self.repository.delete_entry(entry_id)
 
+    def _validate_market(self, market: str):
+        if not market or len(market.strip()) < 2:
+            raise ValueError("Invalid market symbol")
 
-if __name__ == "__main__":
-    main()
+    def _validate_confidence(self, confidence: float):
+        if not (0 <= confidence <= 1):
+            raise ValueError("Confidence must be between 0 and 1")
+
+    def _validate_hypothesis(self, hypothesis: str):
+        if not hypothesis or len(hypothesis.strip()) < 5:
+            raise ValueError("Hypothesis too short")
