@@ -14,6 +14,7 @@ class JournalService:
     """
 
     def __init__(self, repository: JournalRepository):
+        # Repository dependency keeps persistence separate from business rules.
         self.repository = repository
 
     def create_entry(
@@ -25,13 +26,16 @@ class JournalService:
         tags: Optional[List[str]] = None
     ) -> int:
 
+        # Normalize optional collection fields before validation and storage.
         if tags is None:
             tags = []
 
+        # Validate user-provided fields before constructing the domain model.
         self._validate_market(market)
         self._validate_confidence(confidence)
         self._validate_hypothesis(hypothesis)
 
+        # Build the canonical entry representation used by the rest of the app.
         entry = JournalEntry(
             timestamp=datetime.utcnow().isoformat(),
             market=market.upper(),
@@ -43,6 +47,7 @@ class JournalService:
 
         return self.repository.create_entry(entry)
 
+    # Read operations: expose repository queries through the service layer.
     def get_entries(self) -> List[JournalEntry]:
         return self.repository.get_all_entries()
 
@@ -52,6 +57,7 @@ class JournalService:
     def delete_entry(self, entry_id: int) -> bool:
         return self.repository.delete_entry(entry_id)
 
+    # Validation helpers: keep domain constraints close to entry creation.
     def _validate_market(self, market: str):
         if not market or len(market.strip()) < 2:
             raise ValueError("Invalid market symbol")

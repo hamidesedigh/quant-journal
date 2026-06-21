@@ -12,15 +12,18 @@ class JournalRepository:
     """
 
     def __init__(self, db_path: str = "data/journal.db"):
+        # Database path can be overridden by tests or future configuration.
         self.db_path = db_path
         self._initialize_database()
 
     def _connect(self):
+        # Row factory allows column access by name when hydrating models.
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         return conn
 
     def _initialize_database(self):
+        # Schema setup: create the data directory and journal table if needed.
         Path("data").mkdir(exist_ok=True)
 
         with self._connect() as conn:
@@ -38,6 +41,7 @@ class JournalRepository:
             conn.commit()
 
     def create_entry(self, entry: JournalEntry) -> int:
+        # Insert a validated journal entry and return its generated row ID.
         with self._connect() as conn:
             cursor = conn.execute("""
                 INSERT INTO journal_entries (
@@ -60,12 +64,14 @@ class JournalRepository:
             return cursor.lastrowid
 
     def get_all_entries(self) -> List[JournalEntry]:
+        # Fetch newest entries first so recent journal context appears on top.
         with self._connect() as conn:
             rows = conn.execute("""
                 SELECT * FROM journal_entries
                 ORDER BY timestamp DESC
             """).fetchall()
 
+        # Convert SQLite rows back into domain models for callers.
         entries = []
         for row in rows:
             entries.append(
@@ -82,6 +88,7 @@ class JournalRepository:
         return entries
 
     def get_entry_by_id(self, entry_id: int) -> Optional[JournalEntry]:
+        # Look up one entry by its database identifier.
         with self._connect() as conn:
             row = conn.execute("""
                 SELECT * FROM journal_entries
@@ -91,6 +98,7 @@ class JournalRepository:
         if row is None:
             return None
 
+        # Hydrate the row into the same model shape used by list queries.
         return JournalEntry(
             timestamp=row["timestamp"],
             market=row["market"],
@@ -101,6 +109,7 @@ class JournalRepository:
         )
 
     def delete_entry(self, entry_id: int) -> bool:
+        # Return whether a row was actually removed.
         with self._connect() as conn:
             cursor = conn.execute("""
                 DELETE FROM journal_entries

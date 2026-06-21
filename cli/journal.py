@@ -4,25 +4,28 @@ from services.journal_service import JournalService
 
 
 def main():
+    # Application wiring: connect the CLI to the service and database layers.
     repo = JournalRepository()
     service = JournalService(repo)
 
+    # CLI parser setup: defines the main command group for journal actions.
     parser = argparse.ArgumentParser(description="Quant Journal CLI")
 
     subparsers = parser.add_subparsers(dest="command")
 
-    # ADD ENTRY
+    # Add command: captures the required fields for a new journal entry.
     add_parser = subparsers.add_parser("add")
     add_parser.add_argument("--market", required=True)
     add_parser.add_argument("--hypothesis", required=True)
     add_parser.add_argument("--confidence", type=float, default=0.5)
     add_parser.add_argument("--tags", default="")
 
-    # LIST
+    # List command: prints existing journal entries from newest to oldest.
     subparsers.add_parser("list")
 
     args = parser.parse_args()
 
+    # Command dispatch: route parsed CLI input to the matching service method.
     if args.command == "add":
         tags = args.tags.split(",") if args.tags else []
 
@@ -54,8 +57,10 @@ def main():
                     print(f"Tags      : {', '.join(entry.tags)}")
 
     else:
+        # Default output: show available commands when no command is selected.
         parser.print_help()
 
 
 if __name__ == "__main__":
+    # Script entry point for direct execution with python cli/journal.py.
     main()
