@@ -1,7 +1,15 @@
+"""
+Shared data models for the Quant Journal application.
+
+Models in this file describe the shape of data that moves between the CLI,
+service layer, and database repository.
+"""
+
 from typing import List
 from pydantic import BaseModel
 
 
+# JournalEntry contains the complete structured data for one journal record.
 class JournalEntry(BaseModel):
     """
     Domain model for a single trading journal entry.

@@ -1,3 +1,10 @@
+"""
+SQLite connection and schema setup for daily report analysis.
+
+This module is separate from the journal-entry repository and prepares tables
+for higher-level market reports and per-asset technical analysis.
+"""
+
 import sqlite3
 
 # Database name for the report-analysis tables.
@@ -5,11 +12,19 @@ DB_NAME = "reports.db"
 
 
 def get_connection():
+    """
+    Return a SQLite connection to the report database.
+    """
+
     # Open a SQLite connection for report-related storage.
     return sqlite3.connect(DB_NAME)
 
 
 def init_db():
+    """
+    Create the report-analysis tables if they do not already exist.
+    """
+
     # Initialize the report database schema.
     conn = get_connection()
     cur = conn.cursor()

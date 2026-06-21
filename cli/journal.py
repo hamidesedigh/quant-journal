@@ -1,9 +1,23 @@
+"""
+Command-line interface for the Quant Journal application.
+
+This file defines the user-facing commands, parses terminal arguments, and
+passes valid requests into the journal service layer.
+"""
+
 import argparse
 from db.repository import JournalRepository
 from services.journal_service import JournalService
 
 
 def main():
+    """
+    Run the journal CLI.
+
+    The function creates the repository and service objects, defines available
+    commands, reads the user's command-line input, and prints command results.
+    """
+
     # Application wiring: connect the CLI to the service and database layers.
     repo = JournalRepository()
     service = JournalService(repo)
