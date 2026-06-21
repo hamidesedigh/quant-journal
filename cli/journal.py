@@ -38,7 +38,20 @@ def main():
     elif args.command == "list":
         entries = service.get_entries()
         for e in entries:
-            print(e)
+            entries = service.get_entries()
+            
+            if not entries:
+                print("No journal entries found.")
+            else:
+                for i, entry in enumerate(entries, start=1):
+                    print(f"\nEntry #{i}")
+                    print("-" * 40)
+                    print(f"Timestamp : {entry.timestamp}")
+                    print(f"Market    : {entry.market}")
+                    print(f"Hypothesis: {entry.hypothesis}")
+                    print(f"Observation: {entry.observation}")
+                    print(f"Confidence: {entry.confidence}")
+                    print(f"Tags      : {', '.join(entry.tags)}")
 
     else:
         parser.print_help()
