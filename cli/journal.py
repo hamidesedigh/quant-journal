@@ -6,8 +6,15 @@ passes valid requests into the journal service layer.
 """
 
 import argparse
+import sys
+from pathlib import Path
+
+if __package__ is None or __package__ == "":
+    sys.path.append(str(Path(__file__).resolve().parents[1]))
+
 from db.repository import JournalRepository
 from services.journal_service import JournalService
+from services.report_service import ReportService
 
 
 def main():
@@ -37,6 +44,9 @@ def main():
     # List command: prints existing journal entries from newest to oldest.
     subparsers.add_parser("list")
 
+    # Report command: prints a summary of the current journal entries.
+    subparsers.add_parser("report")
+
     args = parser.parse_args()
 
     # Command dispatch: route parsed CLI input to the matching service method.
@@ -54,21 +64,23 @@ def main():
 
     elif args.command == "list":
         entries = service.get_entries()
-        for e in entries:
-            entries = service.get_entries()
-            
-            if not entries:
-                print("No journal entries found.")
-            else:
-                for i, entry in enumerate(entries, start=1):
-                    print(f"\nEntry #{i}")
-                    print("-" * 40)
-                    print(f"Timestamp : {entry.timestamp}")
-                    print(f"Market    : {entry.market}")
-                    print(f"Hypothesis: {entry.hypothesis}")
-                    print(f"Observation: {entry.observation}")
-                    print(f"Confidence: {entry.confidence}")
-                    print(f"Tags      : {', '.join(entry.tags)}")
+
+        if not entries:
+            print("No journal entries found.")
+        else:
+            for i, entry in enumerate(entries, start=1):
+                print(f"\nEntry #{i}")
+                print("-" * 40)
+                print(f"Timestamp : {entry.timestamp}")
+                print(f"Market    : {entry.market}")
+                print(f"Hypothesis: {entry.hypothesis}")
+                print(f"Observation: {entry.observation}")
+                print(f"Confidence: {entry.confidence}")
+                print(f"Tags      : {', '.join(entry.tags)}")
+    
+    elif args.command == "report":
+        report_service = ReportService(repo)
+        print(report_service.generate_daily_report())
 
     else:
         # Default output: show available commands when no command is selected.

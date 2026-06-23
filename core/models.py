@@ -31,3 +31,15 @@ class JournalEntry(BaseModel):
 
     # Flexible labels for filtering or grouping entries later.
     tags: List[str] = []
+
+
+class DailyReport(BaseModel):
+    """
+    Summary model for journal activity across all stored entries.
+    """
+
+    date: str
+    total_entries: int
+    markets: List[str]
+    avg_confidence: float
+    hypotheses: List[str]
