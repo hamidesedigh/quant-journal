@@ -54,7 +54,7 @@ class JournalService:
 
         # Build the canonical entry representation used by the rest of the app.
         entry = JournalEntry(
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=datetime.now().isoformat(),
             market=market.upper(),
             hypothesis=hypothesis.strip(),
             observation=observation.strip(),

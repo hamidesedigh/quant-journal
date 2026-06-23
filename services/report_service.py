@@ -64,7 +64,7 @@ class ReportService:
         hypotheses = [entry.hypothesis for entry in entries]
 
         return DailyReport(
-            date=datetime.utcnow().date().isoformat(),
+            date=datetime.now().date().isoformat(),
             total_entries=total_entries,
             markets=markets,
             avg_confidence=avg_confidence,
